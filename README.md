@@ -101,6 +101,87 @@ You can add more tests in `tests/test_recommender.py`.
 
 ---
 
+## Example Output: Recommendation CLI
+
+When you run `python -m src.main`, the recommender generates personalized recommendations with detailed scoring explanations. Here's an example for a user who prefers chill lofi/jazz music:
+
+```
+Loaded songs: 18
+
+🎵 Recommendations for Alex:
+   Preferred genres: lofi, jazz, folk, ambient
+   Preferred moods: chill, relaxed, contemplative
+   Target vibe: Energy 0.45, Acousticness 0.75
+
+================================================================================
+
+1. Midnight Coding - LoRoom
+   Score: 100.0/100
+   Breakdown:
+      • ✓ Genre match: lofi (+2.5)
+      • ✓ Mood match: chill (+2.0)
+      • Energy: 0.42 vs 0.45 (Perfect match) (+3.00)
+      • Valence: 0.56 vs 0.65 (Perfect match) (+3.00)
+      • Danceability: 0.62 vs 0.60 (Perfect match) (+3.00)
+      • Acousticness: 0.71 vs 0.75 (Perfect match) (+3.00)
+      • Tempo: 78 BPM vs 85 BPM (Perfect tempo match) (+2.50)
+
+2. Library Rain - Paper Lanterns
+   Score: 98.3/100
+   Breakdown:
+      • ✓ Genre match: lofi (+2.5)
+      • ✓ Mood match: chill (+2.0)
+      • Energy: 0.35 vs 0.45 (Close match (distance: 0.10)) (+3.00)
+      • Valence: 0.60 vs 0.65 (Perfect match) (+3.00)
+      • Danceability: 0.58 vs 0.60 (Perfect match) (+3.00)
+      • Acousticness: 0.86 vs 0.75 (Close match (distance: 0.11)) (+2.90)
+      • Tempo: 72 BPM vs 85 BPM (Close tempo match (13 BPM diff)) (+2.27)
+
+3. Coffee Shop Stories - Slow Stereo
+   Score: 97.9/100
+   Breakdown:
+      • ✓ Genre match: jazz (+2.5)
+      • ✓ Mood match: relaxed (+2.0)
+      • Energy: 0.37 vs 0.45 (Perfect match) (+3.00)
+      • Valence: 0.71 vs 0.65 (Perfect match) (+3.00)
+      • Danceability: 0.54 vs 0.60 (Perfect match) (+3.00)
+      • Acousticness: 0.89 vs 0.75 (Close match (distance: 0.14)) (+2.60)
+      • Tempo: 90 BPM vs 85 BPM (Perfect tempo match) (+2.50)
+
+4. Focus Flow - LoRoom
+   Score: 89.5/100
+   Breakdown:
+      • ✓ Genre match: lofi (+2.5)
+      • Energy: 0.40 vs 0.45 (Perfect match) (+3.00)
+      • Valence: 0.59 vs 0.65 (Perfect match) (+3.00)
+      • Danceability: 0.60 vs 0.60 (Perfect match) (+3.00)
+      • Acousticness: 0.78 vs 0.75 (Perfect match) (+3.00)
+      • Tempo: 80 BPM vs 85 BPM (Perfect tempo match) (+2.50)
+
+5. Spacewalk Thoughts - Orbit Bloom
+   Score: 82.0/100
+   Breakdown:
+      • ✓ Genre match: ambient (+2.5)
+      • ✓ Mood match: chill (+2.0)
+      • Energy: 0.28 vs 0.45 (Close match (distance: 0.17)) (+2.30)
+      • Valence: 0.65 vs 0.65 (Perfect match) (+3.00)
+      • Danceability: 0.41 vs 0.60 (Close match (distance: 0.19)) (+2.10)
+      • Acousticness: 0.92 vs 0.75 (Close match (distance: 0.17)) (+2.30)
+      • Tempo: 60 BPM vs 85 BPM (Close tempo match (25 BPM diff)) (+1.38)
+
+================================================================================
+```
+
+**Output Interpretation:**
+- **Score**: Normalized 0-100 scale based on point-weighting algorithm (max 19.0 points → /19 × 100)
+- **Breakdown**: Each feature shows:
+  - Actual value vs. user's target
+  - Match quality (Perfect/Close/Moderate/Poor)
+  - Points awarded for that feature
+- **Checkmarks**: ✓ indicates matching preferred genre/mood (bonus points)
+
+---
+
 ## Experiments You Tried
 
 Use this section to document the experiments you ran. For example:
