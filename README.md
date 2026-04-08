@@ -17,17 +17,52 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+This system implements a **content-based recommender** that matches songs to users based on song attributes (audio features and metadata) rather than collaborative filtering (learning from other users' behavior). Real-world systems like Spotify use hybrid approaches combining collaborative, content-based, and contextual signals, but our version prioritizes **simplicity and explainability**. We focus on quantifying musical "vibe" through features like energy, mood, and tempo—the primary factors that define whether a song matches a user's current taste.
 
-Some prompts to answer:
+**Song Features:**
+- **Categorical**: `genre` (e.g., pop, lofi, rock), `mood` (e.g., happy, chill, intense)
+- **Numerical (0-1 scale)**: `energy`, `valence` (positivity), `danceability`, `acousticness`
+- **Metadata**: `tempo_bpm`, `title`, `artist`, `id`
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+**UserProfile Information:**
+- **Target preferences**: `target_energy`, `target_valence`, `target_danceability`, `target_acousticness`, `target_tempo_bpm`
+- **Categorical preferences**: `preferred_genres` (list), `preferred_moods` (list)
+- **Feature weights**: How much each feature matters (e.g., energy_weight=0.4, genre_weight=0.3)
 
-You can include a simple diagram or bullet list if helpful.
+**Algorithm Recipe (Point-Weighting System):**
+
+The recommender scores each song using a point-based system with a theoretical maximum of **19.0 points**:
+
+| Feature | Points | Calculation |
+|---------|--------|-------------|
+| **Genre Match** | +2.5 | If song genre ∈ preferred_genres |
+| **Mood Match** | +2.0 | If song mood ∈ preferred_moods |
+| **Energy** | 0–3.0 | Distance-based: 3.0 if |song_energy - target| ≤ 0.10; decays with distance |
+| **Valence** | 0–3.0 | Distance-based: max 3.0 points for closeness to target valence |
+| **Danceability** | 0–3.0 | Distance-based: max 3.0 points for closeness to target danceability |
+| **Acousticness** | 0–3.0 | Distance-based: max 3.0 points for closeness to target acousticness |
+| **Tempo (BPM)** | 0–2.5 | 2.5 if |song_tempo - target_tempo| ≤ 10 BPM; decays with distance |
+
+**Final Score: `(raw_points / 19.0) × 100`** → Normalized to 0–100 scale for intuitive interpretation.
+
+**Ranking and Recommendation Process:**
+1. **Score all songs**: Load catalog (18 songs from CSV) and apply point-weighting formula to each
+2. **Sort descending**: Rank by raw points, highest first
+3. **Select top-K**: Return top K recommendations (e.g., top 5) with explanations showing which features matched
+
+**Example Score Calculation** (User prefers lofi/chill, target energy 0.45):
+- "Library Rain" (lofi, chill, energy 0.35): Genre match (+2.5) + Mood match (+2.0) + Energy match (3.0) + other features = **98.3/100** ✨
+- "Island Vibes" (reggae, uplifting, energy 0.58): Energy close (+2.7) + Valence close (+2.8) = **73.7/100** ✓
+- "Burning Skies" (metal, aggressive, energy 0.96): No genre/mood match, poor energy fit = **17.4/100** ✗
+
+**Expected Biases and Limitations:**
+- **Genre over-prioritization**: With +2.5 for genre match, songs outside preferred genres start at a disadvantage, potentially creating "filter bubbles" and suppressing cross-genre discovery (e.g., a great reggae song never gets recommended to a lofi-heavy user).
+- **Narrow categorical filtering**: Only 4 preferred genres means ~78% of diverse songs are genre mismatches from the start, limiting serendipity.
+- **No semantic understanding**: System can't evaluate lyrics, instrumentals, or nuanced qualities like "nostalgic" or "intimate"—only quantifiable audio features.
+- **Limited dataset**: With only 18 songs, recommendations are constrained; real systems have millions of tracks.
+- **No collaborative signals**: System ignores what other users like; can't discover emerging artists or cross-community tastes.
+- **Feature extraction limits**: Energy and valence are approximations; the "vibe" of a song is multidimensional and subjective.
+
 
 ---
 
