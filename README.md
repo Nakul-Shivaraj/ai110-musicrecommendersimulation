@@ -276,6 +276,52 @@ Examples of what you could test:
 
 ---
 
+## Accuracy Evaluation & Musical Intuition
+
+### Do the Recommendations "Feel Right"?
+
+**Overall Assessment: YES, with one critical finding**
+
+#### What Works Well ✅
+- **Lofi Devotee** → "Midnight Coding" (100.0/100): Perfectly coherent—lofi genre, chill mood, all features aligned
+- **Jazz Snob** → "Coffee Shop Stories" (100.0/100): Niche match—only jazz song in catalog, features perfect
+- **Audio Engineer** → "Sunrise City" (97.9/100): Feature-driven success—excellent energy/valence/danceability match despite preferring rock
+
+#### The Weighting Problem 🚨
+- **Confused Party Animal Profile**: Explicitly wants "lofi & ambient" genres BUT feature targets are extreme (energy 0.90, valence 0.85, acousticness 0.05)
+  - Result: Gets "Gym Hero" (pop, intense) instead of lofi
+  - Why: Genre weight (2.5 points) is only 13% of max score; feature matching (12 points) dominates
+  - **Insight**: Numerical features override categorical preferences when misaligned
+
+### Key Finding: "Midnight Coding" Appears 3 Times—Is This Bad?
+
+**Answer: NO—it's a catalog problem, not an algorithm problem.**
+
+"Midnight Coding" wins for Profiles 1, 5, and 7 because:
+- It objectively achieves **19.0/19.0 points** (100%) for Profiles 1 & 5 (identical targets)
+- It's the **best lofi match** for those profiles (only 2 lofi songs in catalog)
+- The algorithm is working correctly—it found the optimal match
+- The **catalog lacks diversity**: Only 2 lofi songs, 3 ambient songs, but 6 pop songs (33% of catalog)
+
+### Genre Weight Evaluation
+
+| Metric | Current | Assessment |
+|--------|---------|-----------|
+| Genre Points | 2.5 | 13% of max score (4.5/19 with mood) |
+| Effect | Genre preference is weak | Numerical features dominate recommendations |
+| Impact | Filter bubble reduced | But users with genre preferences feel ignored (Profile 2) |
+
+**Recommendation**: Raise genre weight to 3.5–4.0 to give categorical preferences more voice, OR expand the lofi/ambient catalog to provide more options within preferred genres.
+
+### Conclusions on Accuracy
+
+1. ✅ **System is mathematically sound**: Scoring logic works as designed
+2. ⚠️ **Weighting reveals trade-offs**: High feature weight sacrifices genre preference for precision
+3. 🔴 **Catalog is undersized**: 18 songs insufficient to properly evaluate diversity and filter bubble effects
+4. 🔴 **Profile 2 exposed a flaw**: Contradictory preferences should either be flagged or explicitly handled
+
+---
+
 ## Limitations and Risks
 
 Summarize some limitations of your recommender.
