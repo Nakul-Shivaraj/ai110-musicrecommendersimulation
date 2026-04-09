@@ -282,12 +282,12 @@ Examples of what you could test:
 
 **Overall Assessment: YES, with one critical finding**
 
-#### What Works Well ✅
+#### What Works Well
 - **Lofi Devotee** → "Midnight Coding" (100.0/100): Perfectly coherent—lofi genre, chill mood, all features aligned
 - **Jazz Snob** → "Coffee Shop Stories" (100.0/100): Niche match—only jazz song in catalog, features perfect
 - **Audio Engineer** → "Sunrise City" (97.9/100): Feature-driven success—excellent energy/valence/danceability match despite preferring rock
 
-#### The Weighting Problem 🚨
+#### The Weighting Problem
 - **Confused Party Animal Profile**: Explicitly wants "lofi & ambient" genres BUT feature targets are extreme (energy 0.90, valence 0.85, acousticness 0.05)
   - Result: Gets "Gym Hero" (pop, intense) instead of lofi
   - Why: Genre weight (2.5 points) is only 13% of max score; feature matching (12 points) dominates

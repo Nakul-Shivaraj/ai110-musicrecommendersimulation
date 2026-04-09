@@ -138,7 +138,7 @@ def load_songs(csv_path: str) -> List[Dict]:
 def _calculate_distance_score_0_to_3(distance: float) -> Tuple[float, str]:
     """
     Calculate points for attributes with 0-3.0 point scale based on distance.
-    Used for: Energy, Valence, Danceability, Acousticness
+    Used for: Valence, Danceability, Acousticness
     
     Args:
         distance: Absolute difference between song attribute and user target
@@ -153,6 +153,29 @@ def _calculate_distance_score_0_to_3(distance: float) -> Tuple[float, str]:
         return max(0.0, points), f"Close match (distance: {distance:.2f})"
     elif distance <= 0.50:
         points = 2.5 - (5 * distance)
+        return max(0.0, points), f"Moderate match (distance: {distance:.2f})"
+    else:
+        return 0.0, f"Poor match (distance: {distance:.2f})"
+
+
+def _calculate_energy_score_0_to_6(distance: float) -> Tuple[float, str]:
+    """
+    Calculate points for energy with 0-6.0 point scale based on distance.
+    Double the original 0-3.0 scale to emphasize energy matching.
+    
+    Args:
+        distance: Absolute difference between song energy and user target
+        
+    Returns:
+        Tuple of (points: float, reason: str)
+    """
+    if distance <= 0.10:
+        return 6.0, "Perfect match"
+    elif distance <= 0.30:
+        points = 8.0 - (20 * distance)
+        return max(0.0, points), f"Close match (distance: {distance:.2f})"
+    elif distance <= 0.50:
+        points = 5.0 - (10 * distance)
         return max(0.0, points), f"Moderate match (distance: {distance:.2f})"
     else:
         return 0.0, f"Poor match (distance: {distance:.2f})"
@@ -184,10 +207,10 @@ def score_song(song: Dict, user_prefs: Dict) -> Tuple[float, List[str]]:
     """
     Score a song based on user preferences using a point-weighting algorithm.
     
-    Maximum possible score: 19.0 points
-    - Genre match: 2.5 points
+    Maximum possible score: 20.75 points
+    - Genre match: 1.25 points
     - Mood match: 2.0 points
-    - Energy: 3.0 points (distance-based)
+    - Energy: 6.0 points (distance-based)
     - Valence: 3.0 points (distance-based)
     - Danceability: 3.0 points (distance-based)
     - Acousticness: 3.0 points (distance-based)
@@ -211,19 +234,19 @@ def score_song(song: Dict, user_prefs: Dict) -> Tuple[float, List[str]]:
     points = 0.0
     reasons = []
     
-    # Genre match (2.5 points)
+    # Genre match (1.25 points)
     if song.get('genre') in user_prefs.get('preferred_genres', []):
-        points += 2.5
-        reasons.append(f"✓ Genre match: {song.get('genre')} (+2.5)")
+        points += 1.25
+        reasons.append(f"✓ Genre match: {song.get('genre')} (+1.25)")
     
     # Mood match (2.0 points)
     if song.get('mood') in user_prefs.get('preferred_moods', []):
         points += 2.0
         reasons.append(f"✓ Mood match: {song.get('mood')} (+2.0)")
     
-    # Energy (0-3.0 points)
+    # Energy (0-6.0 points)
     energy_distance = abs(song.get('energy', 0.0) - user_prefs.get('target_energy', 0.5))
-    energy_points, energy_reason = _calculate_distance_score_0_to_3(energy_distance)
+    energy_points, energy_reason = _calculate_energy_score_0_to_6(energy_distance)
     points += energy_points
     reasons.append(
         f"Energy: {song.get('energy', 0.0):.2f} vs {user_prefs.get('target_energy', 0.5):.2f} "
@@ -267,7 +290,7 @@ def score_song(song: Dict, user_prefs: Dict) -> Tuple[float, List[str]]:
     )
     
     # Normalize to 0-100 scale
-    normalized_score = (points / 19.0) * 100
+    normalized_score = (points / 20.75) * 100
     
     return normalized_score, reasons
 
