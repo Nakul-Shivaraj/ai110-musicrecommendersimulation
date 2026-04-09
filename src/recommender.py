@@ -566,56 +566,140 @@ def score_song(song: Dict, user_prefs: Dict, mode: str = "balanced") -> Tuple[fl
     return get_scoring_strategy(mode).score(song, user_prefs)
 
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5, mode: str = "balanced") -> List[Tuple[Dict, float, str]]:
+def _apply_diversity_penalty(
+    candidate: Dict,
+    selected: List[Dict],
+    artist_penalty: float = 0.35,
+    genre_penalty: float = 0.20,
+) -> Tuple[float, List[str]]:
+    """
+    Calculate cumulative diversity penalties for a candidate song based on
+    artists and genres already present in the selected list.
+
+    Each duplicate artist already selected incurs an `artist_penalty` multiplier
+    reduction (e.g. 0.35 means the score is multiplied by 0.65).  Each duplicate
+    genre already selected incurs a `genre_penalty` multiplier reduction.
+    Penalties compound multiplicatively so a second repeat hurts more than the
+    first.
+
+    Args:
+        candidate:      Song dict being evaluated.
+        selected:       Songs already chosen for the recommendation list.
+        artist_penalty: Score multiplier reduction per repeated artist (0-1).
+        genre_penalty:  Score multiplier reduction per repeated genre  (0-1).
+
+    Returns:
+        Tuple of (total_multiplier, list_of_penalty_reason_strings).
+        total_multiplier == 1.0 means no penalty; lower means penalised.
+    """
+    multiplier = 1.0
+    reasons: List[str] = []
+
+    candidate_artist = candidate.get("artist", "").strip().lower()
+    candidate_genre = candidate.get("genre", "").strip().lower()
+
+    artist_count = sum(
+        1 for s in selected
+        if s.get("artist", "").strip().lower() == candidate_artist
+    )
+    genre_count = sum(
+        1 for s in selected
+        if s.get("genre", "").strip().lower() == candidate_genre
+    )
+
+    if artist_count > 0:
+        artist_multiplier = (1.0 - artist_penalty) ** artist_count
+        multiplier *= artist_multiplier
+        reasons.append(
+            f"Artist '{candidate.get('artist')}' already appears {artist_count}x "
+            f"→ artist penalty x{artist_multiplier:.2f}"
+        )
+
+    if genre_count > 0:
+        genre_multiplier = (1.0 - genre_penalty) ** genre_count
+        multiplier *= genre_multiplier
+        reasons.append(
+            f"Genre '{candidate.get('genre')}' already appears {genre_count}x "
+            f"→ genre penalty x{genre_multiplier:.2f}"
+        )
+
+    return multiplier, reasons
+
+
+def recommend_songs(
+    user_prefs: Dict,
+    songs: List[Dict],
+    k: int = 5,
+    mode: str = "balanced",
+    diversity: bool = True,
+    artist_penalty: float = 0.35,
+    genre_penalty: float = 0.20,
+) -> List[Tuple[Dict, float, str]]:
     """
     Score all songs and return top-K recommendations with explanations.
 
+    When diversity=True (default), a greedy selection loop applies cumulative
+    penalties to candidates that repeat an artist or genre already in the
+    result list.  This prevents any single artist or genre from dominating
+    the top results (filter-bubble mitigation).
+
     Args:
-        user_prefs: User preferences dictionary
-        songs: List of song dictionaries
-        k: Number of top recommendations to return
-        mode: Scoring mode to use for ranking
+        user_prefs:     User preferences dictionary.
+        songs:          List of song dictionaries.
+        k:              Number of top recommendations to return.
+        mode:           Scoring strategy ('balanced', 'genre-first', etc.).
+        diversity:      Enable diversity penalties (default True).
+        artist_penalty: Score multiplier reduction per repeated artist (0-1).
+        genre_penalty:  Score multiplier reduction per repeated genre  (0-1).
 
     Returns:
-        List of (song_dict, normalized_score, explanation_string) tuples, sorted by score descending
+        List of (song_dict, penalized_score, explanation_string) tuples,
+        sorted by final score descending.
     """
     if not songs:
         return []
 
     strategy = get_scoring_strategy(mode)
 
-    scored_songs = []
+    # Step 1 — score every song against the user profile
+    scored: List[Tuple[Dict, float, str]] = []
     for song in songs:
-        score, reasons = strategy.score(song, user_prefs)
+        raw_score, reasons = strategy.score(song, user_prefs)
         explanation = " | ".join(reasons)
-        scored_songs.append((song, score, explanation))
+        scored.append((song, raw_score, explanation))
 
-    scored_songs.sort(key=lambda x: x[1], reverse=True)
+    if not diversity:
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return scored[:k]
 
-    return scored_songs[:k]
-    """
-    Score all songs and return top-K recommendations with explanations.
-    
-    Args:
-        user_prefs: User preferences dictionary
-        songs: List of song dictionaries
-        k: Number of top recommendations to return
-        
-    Returns:
-        List of (song_dict, normalized_score, explanation_string) tuples, sorted by score descending
-    """
-    if not songs:
-        return []
-    
-    # Score all songs
-    scored_songs = []
-    for song in songs:
-        score, reasons = score_song(song, user_prefs)
-        explanation = " | ".join(reasons)
-        scored_songs.append((song, score, explanation))
-    
-    # Sort by score descending
-    scored_songs.sort(key=lambda x: x[1], reverse=True)
-    
-    # Return top-K
-    return scored_songs[:k]
+    # Step 2 — greedy diversity-aware selection
+    # Keep a pool of remaining candidates (mutable scores).
+    pool: List[Tuple[Dict, float, str]] = list(scored)
+    selected: List[Dict] = []
+    results: List[Tuple[Dict, float, str]] = []
+
+    while len(results) < k and pool:
+        # Re-score every remaining candidate with current diversity penalties
+        penalized_pool: List[Tuple[Dict, float, str]] = []
+        for song, base_score, explanation in pool:
+            multiplier, penalty_reasons = _apply_diversity_penalty(
+                song, selected, artist_penalty, genre_penalty
+            )
+            penalized_score = base_score * multiplier
+            full_explanation = explanation
+            if penalty_reasons:
+                full_explanation += " | DIVERSITY: " + "; ".join(penalty_reasons)
+            penalized_pool.append((song, penalized_score, full_explanation))
+
+        # Pick the highest-scoring candidate after penalties
+        penalized_pool.sort(key=lambda x: x[1], reverse=True)
+        best_song, best_score, best_explanation = penalized_pool[0]
+
+        results.append((best_song, best_score, best_explanation))
+        selected.append(best_song)
+
+        # Remove the chosen song from the pool (match by song id)
+        best_id = best_song.get("id")
+        pool = [(s, sc, ex) for s, sc, ex in pool if s.get("id") != best_id]
+
+    return results
