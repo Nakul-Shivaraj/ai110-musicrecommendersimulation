@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
+from abc import ABC, abstractmethod
 import csv
 import logging
 from pathlib import Path
@@ -54,12 +55,214 @@ class Recommender:
         self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        # TODO: Implement recommendation logic
         return self.songs[:k]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        # TODO: Implement explanation logic
         return "Explanation placeholder"
+
+
+class ScoringStrategy(ABC):
+    """Strategy interface for scoring songs."""
+    name: str = "balanced"
+    genre_weight: float = 1.0
+    mood_weight: float = 1.0
+    energy_weight: float = 1.0
+    valence_weight: float = 1.0
+    danceability_weight: float = 1.0
+    acousticness_weight: float = 1.0
+    tempo_weight: float = 1.0
+    popularity_weight: float = 1.0
+    decade_weight: float = 1.0
+    detailed_mood_weight: float = 1.0
+    artist_popularity_weight: float = 1.0
+    length_weight: float = 1.0
+
+    @property
+    def max_points(self) -> float:
+        return (
+            1.25 * self.genre_weight
+            + 2.0 * self.mood_weight
+            + 6.0 * self.energy_weight
+            + 3.0 * self.valence_weight
+            + 3.0 * self.danceability_weight
+            + 3.0 * self.acousticness_weight
+            + 2.5 * self.tempo_weight
+            + 2.0 * self.popularity_weight
+            + 2.0 * self.decade_weight
+            + 2.5 * self.detailed_mood_weight
+            + 1.5 * self.artist_popularity_weight
+            + 2.0 * self.length_weight
+        )
+
+    def score(self, song: Dict, user_prefs: Dict) -> Tuple[float, List[str]]:
+        points = 0.0
+        reasons: List[str] = []
+
+        # Genre match
+        if song.get("genre") in user_prefs.get("preferred_genres", []):
+            genre_points = 1.25 * self.genre_weight
+            points += genre_points
+            reasons.append(f"Genre match: {song.get('genre')} (+{genre_points:.2f})")
+
+        # Mood match
+        if song.get("mood") in user_prefs.get("preferred_moods", []):
+            mood_points = 2.0 * self.mood_weight
+            points += mood_points
+            reasons.append(f"Mood match: {song.get('mood')} (+{mood_points:.2f})")
+
+        # Energy
+        energy_distance = abs(song.get("energy", 0.0) - user_prefs.get("target_energy", 0.5))
+        energy_points, energy_reason = _calculate_energy_score_0_to_6(energy_distance)
+        weighted_energy = energy_points * self.energy_weight
+        points += weighted_energy
+        reasons.append(
+            f"Energy: {song.get('energy', 0.0):.2f} vs {user_prefs.get('target_energy', 0.5):.2f} "
+            f"({energy_reason}) (+{weighted_energy:.2f})"
+        )
+
+        # Valence
+        valence_distance = abs(song.get("valence", 0.0) - user_prefs.get("target_valence", 0.5))
+        valence_points, valence_reason = _calculate_distance_score_0_to_3(valence_distance)
+        weighted_valence = valence_points * self.valence_weight
+        points += weighted_valence
+        reasons.append(
+            f"Valence: {song.get('valence', 0.0):.2f} vs {user_prefs.get('target_valence', 0.5):.2f} "
+            f"({valence_reason}) (+{weighted_valence:.2f})"
+        )
+
+        # Danceability
+        dance_distance = abs(song.get("danceability", 0.0) - user_prefs.get("target_danceability", 0.5))
+        dance_points, dance_reason = _calculate_distance_score_0_to_3(dance_distance)
+        weighted_dance = dance_points * self.danceability_weight
+        points += weighted_dance
+        reasons.append(
+            f"Danceability: {song.get('danceability', 0.0):.2f} vs {user_prefs.get('target_danceability', 0.5):.2f} "
+            f"({dance_reason}) (+{weighted_dance:.2f})"
+        )
+
+        # Acousticness
+        acoustic_distance = abs(song.get("acousticness", 0.0) - user_prefs.get("target_acousticness", 0.5))
+        acoustic_points, acoustic_reason = _calculate_distance_score_0_to_3(acoustic_distance)
+        weighted_acoustic = acoustic_points * self.acousticness_weight
+        points += weighted_acoustic
+        reasons.append(
+            f"Acousticness: {song.get('acousticness', 0.0):.2f} vs {user_prefs.get('target_acousticness', 0.5):.2f} "
+            f"({acoustic_reason}) (+{weighted_acoustic:.2f})"
+        )
+
+        # Tempo
+        tempo_distance = abs(song.get("tempo_bpm", 120.0) - user_prefs.get("target_tempo_bpm", 120.0))
+        tempo_points, tempo_reason = _calculate_tempo_score(tempo_distance)
+        weighted_tempo = tempo_points * self.tempo_weight
+        points += weighted_tempo
+        reasons.append(
+            f"Tempo: {song.get('tempo_bpm', 120.0):.0f} BPM vs {user_prefs.get('target_tempo_bpm', 120.0):.0f} BPM "
+            f"({tempo_reason}) (+{weighted_tempo:.2f})"
+        )
+
+        # Song popularity
+        song_pop = song.get("song_popularity", 50)
+        prefer_popular = user_prefs.get("prefer_popular_songs", False)
+        pop_points, pop_reason = _calculate_popularity_score(song_pop, prefer_popular, weight=self.popularity_weight)
+        points += pop_points
+        reasons.append(f"Song Popularity: {pop_reason}")
+
+        # Decade
+        song_decade = song.get("release_decade", "2010s")
+        pref_decades = user_prefs.get("preferred_release_decades", [])
+        decade_points, decade_reason = _calculate_decade_score(song_decade, pref_decades)
+        weighted_decade = decade_points * self.decade_weight
+        points += weighted_decade
+        reasons.append(
+            f"Release Decade: {decade_reason} (weighted x{self.decade_weight:.2f} = +{weighted_decade:.2f})"
+        )
+
+        # Detailed mood tags
+        song_moods_str = song.get("detailed_moods", "")
+        pref_mood_tags = user_prefs.get("preferred_mood_tags", [])
+        mood_points, mood_reason = _calculate_mood_tags_score(song_moods_str, pref_mood_tags)
+        weighted_mood = mood_points * self.detailed_mood_weight
+        points += weighted_mood
+        reasons.append(
+            f"Mood Tags: {mood_reason} (weighted x{self.detailed_mood_weight:.2f} = +{weighted_mood:.2f})"
+        )
+
+        # Artist popularity
+        artist_pop = song.get("artist_popularity", 50)
+        artist_pop_points, artist_pop_reason = _calculate_popularity_score(
+            artist_pop,
+            prefer_popular,
+            weight=0.75 * self.artist_popularity_weight,
+        )
+        points += artist_pop_points
+        reasons.append(f"Artist Popularity: {artist_pop_reason}")
+
+        # Song length
+        song_length = song.get("song_length_seconds", 240)
+        target_length = user_prefs.get("target_song_length_seconds", 240.0)
+        length_points, length_reason = _calculate_song_length_score(song_length, target_length)
+        weighted_length = length_points * self.length_weight
+        points += weighted_length
+        reasons.append(
+            f"Song Length: {length_reason} (weighted x{self.length_weight:.2f} = +{weighted_length:.2f})"
+        )
+
+        normalized_score = 0.0
+        if self.max_points > 0:
+            normalized_score = (points / self.max_points) * 100
+
+        return normalized_score, reasons
+
+
+class BalancedScoringStrategy(ScoringStrategy):
+    name = "balanced"
+
+
+class GenreFirstScoringStrategy(ScoringStrategy):
+    name = "genre-first"
+    genre_weight = 1.5
+    mood_weight = 1.2
+    energy_weight = 0.9
+    tempo_weight = 0.9
+    length_weight = 0.9
+
+
+class MoodFirstScoringStrategy(ScoringStrategy):
+    name = "mood-first"
+    genre_weight = 1.1
+    mood_weight = 1.5
+    detailed_mood_weight = 1.3
+    acousticness_weight = 0.9
+    popularity_weight = 0.9
+
+
+class EnergyFocusedScoringStrategy(ScoringStrategy):
+    name = "energy-focused"
+    genre_weight = 0.9
+    energy_weight = 1.4
+    tempo_weight = 1.2
+    danceability_weight = 1.1
+    popularity_weight = 0.9
+
+
+AVAILABLE_SCORING_MODES = [
+    BalancedScoringStrategy.name,
+    GenreFirstScoringStrategy.name,
+    MoodFirstScoringStrategy.name,
+    EnergyFocusedScoringStrategy.name,
+]
+
+
+def get_scoring_strategy(mode: str) -> ScoringStrategy:
+    normalized_mode = mode.strip().lower()
+    if normalized_mode == GenreFirstScoringStrategy.name:
+        return GenreFirstScoringStrategy()
+    if normalized_mode == MoodFirstScoringStrategy.name:
+        return MoodFirstScoringStrategy()
+    if normalized_mode == EnergyFocusedScoringStrategy.name:
+        return EnergyFocusedScoringStrategy()
+    return BalancedScoringStrategy()
+
 
 def load_songs(csv_path: str) -> List[Dict]:
     """
@@ -358,144 +561,38 @@ def _calculate_song_length_score(song_length: int, target_length: float) -> Tupl
         return points, f"Poor length match: {distance:.0f}s difference (+{points:.2f})"
 
 
-def score_song(song: Dict, user_prefs: Dict) -> Tuple[float, List[str]]:
+def score_song(song: Dict, user_prefs: Dict, mode: str = "balanced") -> Tuple[float, List[str]]:
+    """Score a song using the requested scoring strategy mode."""
+    return get_scoring_strategy(mode).score(song, user_prefs)
+
+
+def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5, mode: str = "balanced") -> List[Tuple[Dict, float, str]]:
     """
-    Score a song based on user preferences using a point-weighting algorithm.
-    
-    Maximum possible score: 30.75 points
-    - Genre match: 1.25 points
-    - Mood match: 2.0 points
-    - Energy: 6.0 points (distance-based)
-    - Valence: 3.0 points (distance-based)
-    - Danceability: 3.0 points (distance-based)
-    - Acousticness: 3.0 points (distance-based)
-    - Tempo: 2.5 points (distance-based)
-    - Song Popularity: 2.0 points (popularity-based)
-    - Release Decade: 2.0 points (exact/close match)
-    - Detailed Moods: 2.5 points (tag matching)
-    - Artist Popularity: 1.5 points (popularity-based, weighted less)
-    - Song Length: 2.0 points (distance-based)
-    
+    Score all songs and return top-K recommendations with explanations.
+
     Args:
-        song: Dictionary with keys: id, title, artist, genre, mood, energy, tempo_bpm, 
-              valence, danceability, acousticness, song_popularity, release_decade, 
-              detailed_moods, artist_popularity, song_length_seconds
-        user_prefs: Dictionary with:
-            - preferred_genres: List[str]
-            - preferred_moods: List[str]
-            - target_energy: float (0-1)
-            - target_valence: float (0-1)
-            - target_danceability: float (0-1)
-            - target_acousticness: float (0-1)
-            - target_tempo_bpm: float (60-180)
-            - prefer_popular_songs: bool
-            - preferred_release_decades: List[str]
-            - preferred_mood_tags: List[str]
-            - target_artist_popularity: float (0-100)
-            - target_song_length_seconds: float (120-400)
-            
+        user_prefs: User preferences dictionary
+        songs: List of song dictionaries
+        k: Number of top recommendations to return
+        mode: Scoring mode to use for ranking
+
     Returns:
-        Tuple of (normalized_score: float [0-100], reasons: List[str])
+        List of (song_dict, normalized_score, explanation_string) tuples, sorted by score descending
     """
-    points = 0.0
-    reasons = []
-    
-    # Genre match (1.25 points)
-    if song.get('genre') in user_prefs.get('preferred_genres', []):
-        points += 1.25
-        reasons.append(f"✓ Genre match: {song.get('genre')} (+1.25)")
-    
-    # Mood match (2.0 points)
-    if song.get('mood') in user_prefs.get('preferred_moods', []):
-        points += 2.0
-        reasons.append(f"✓ Mood match: {song.get('mood')} (+2.0)")
-    
-    # Energy (0-6.0 points)
-    energy_distance = abs(song.get('energy', 0.0) - user_prefs.get('target_energy', 0.5))
-    energy_points, energy_reason = _calculate_energy_score_0_to_6(energy_distance)
-    points += energy_points
-    reasons.append(
-        f"Energy: {song.get('energy', 0.0):.2f} vs {user_prefs.get('target_energy', 0.5):.2f} "
-        f"({energy_reason}) (+{energy_points:.2f})"
-    )
-    
-    # Valence (0-3.0 points)
-    valence_distance = abs(song.get('valence', 0.0) - user_prefs.get('target_valence', 0.5))
-    valence_points, valence_reason = _calculate_distance_score_0_to_3(valence_distance)
-    points += valence_points
-    reasons.append(
-        f"Valence: {song.get('valence', 0.0):.2f} vs {user_prefs.get('target_valence', 0.5):.2f} "
-        f"({valence_reason}) (+{valence_points:.2f})"
-    )
-    
-    # Danceability (0-3.0 points)
-    dance_distance = abs(song.get('danceability', 0.0) - user_prefs.get('target_danceability', 0.5))
-    dance_points, dance_reason = _calculate_distance_score_0_to_3(dance_distance)
-    points += dance_points
-    reasons.append(
-        f"Danceability: {song.get('danceability', 0.0):.2f} vs {user_prefs.get('target_danceability', 0.5):.2f} "
-        f"({dance_reason}) (+{dance_points:.2f})"
-    )
-    
-    # Acousticness (0-3.0 points)
-    acoustic_distance = abs(song.get('acousticness', 0.0) - user_prefs.get('target_acousticness', 0.5))
-    acoustic_points, acoustic_reason = _calculate_distance_score_0_to_3(acoustic_distance)
-    points += acoustic_points
-    reasons.append(
-        f"Acousticness: {song.get('acousticness', 0.0):.2f} vs {user_prefs.get('target_acousticness', 0.5):.2f} "
-        f"({acoustic_reason}) (+{acoustic_points:.2f})"
-    )
-    
-    # Tempo (0-2.5 points)
-    tempo_distance = abs(song.get('tempo_bpm', 120.0) - user_prefs.get('target_tempo_bpm', 120.0))
-    tempo_points, tempo_reason = _calculate_tempo_score(tempo_distance)
-    points += tempo_points
-    reasons.append(
-        f"Tempo: {song.get('tempo_bpm', 120.0):.0f} BPM vs {user_prefs.get('target_tempo_bpm', 120.0):.0f} BPM "
-        f"({tempo_reason}) (+{tempo_points:.2f})"
-    )
-    
-    # Song Popularity (0-2.0 points)
-    song_pop = song.get('song_popularity', 50)
-    prefer_popular = user_prefs.get('prefer_popular_songs', False)
-    pop_points, pop_reason = _calculate_popularity_score(song_pop, prefer_popular, weight=1.0)
-    points += pop_points
-    reasons.append(f"Song Popularity: {pop_reason}")
-    
-    # Release Decade (0-2.0 points)
-    song_decade = song.get('release_decade', '2010s')
-    pref_decades = user_prefs.get('preferred_release_decades', [])
-    decade_points, decade_reason = _calculate_decade_score(song_decade, pref_decades)
-    points += decade_points
-    reasons.append(f"Release Decade: {decade_reason}")
-    
-    # Detailed Moods (0-2.5 points)
-    song_moods_str = song.get('detailed_moods', '')
-    pref_mood_tags = user_prefs.get('preferred_mood_tags', [])
-    mood_points, mood_reason = _calculate_mood_tags_score(song_moods_str, pref_mood_tags)
-    points += mood_points
-    reasons.append(f"Mood Tags: {mood_reason}")
-    
-    # Artist Popularity (0-1.5 points)
-    artist_pop = song.get('artist_popularity', 50)
-    artist_pop_points, artist_pop_reason = _calculate_popularity_score(artist_pop, prefer_popular, weight=0.75)
-    points += artist_pop_points
-    reasons.append(f"Artist Popularity: {artist_pop_reason}")
-    
-    # Song Length (0-2.0 points)
-    song_length = song.get('song_length_seconds', 240)
-    target_length = user_prefs.get('target_song_length_seconds', 240.0)
-    length_points, length_reason = _calculate_song_length_score(song_length, target_length)
-    points += length_points
-    reasons.append(f"Song Length: {length_reason}")
-    
-    # Normalize to 0-100 scale
-    normalized_score = (points / 30.75) * 100
-    
-    return normalized_score, reasons
+    if not songs:
+        return []
 
+    strategy = get_scoring_strategy(mode)
 
-def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
+    scored_songs = []
+    for song in songs:
+        score, reasons = strategy.score(song, user_prefs)
+        explanation = " | ".join(reasons)
+        scored_songs.append((song, score, explanation))
+
+    scored_songs.sort(key=lambda x: x[1], reverse=True)
+
+    return scored_songs[:k]
     """
     Score all songs and return top-K recommendations with explanations.
     

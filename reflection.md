@@ -25,3 +25,12 @@ Adding 5 complex attributes (popularity, release decade, detailed moods, artist 
 - **Complexity trade-off**: More features (max score: 20.75 → 30.75) mean more personalization but also more potential biases
 
 This mirrors real recommender systems where feature expansion must balance personalization with fairness and serendipity.
+
+## Challenge 2: Scoring Modes Reflection
+
+Adding multiple ranking strategies made the recommender more flexible and easier to test.
+- **Genre-first** favors songs that match the user's genre list, even if some audio features are slightly off.
+- **Mood-first** emphasizes emotional match and detailed mood tags, which helps users who care more about vibe than exact tempo.
+- **Energy-focused** boosts songs that fit a target energy and tempo profile, useful for workout or focus-oriented listeners.
+
+This change shows how modular scoring strategies can support different listening goals without rewriting core scoring logic.

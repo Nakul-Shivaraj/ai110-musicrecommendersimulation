@@ -9,8 +9,9 @@ Tests diverse user profiles to evaluate recommender behavior:
 - Genre-heavy vs. feature-heavy profiles
 """
 
-from .recommender import load_songs, recommend_songs
+from .recommender import AVAILABLE_SCORING_MODES, load_songs, recommend_songs
 
+SCORING_MODE = "genre-first"
 
 # Define diverse user profiles for stress testing
 USER_PROFILES = [
@@ -129,7 +130,7 @@ def format_recommendation(song, score, explanation, rank):
     output += f"\n   Breakdown:"
     reasons = explanation.split(" | ")
     for reason in reasons:
-        output += f"\n      • {reason}"
+        output += f"\n      - {reason}"
     return output
 
 
@@ -137,7 +138,8 @@ def main() -> None:
     songs = load_songs("data/songs.csv")
     
     print(f"\n[MUSIC RECOMMENDER SIMULATION - STRESS TEST]")
-    print(f"Loaded songs: {len(songs)} songs from catalog\n")
+    print(f"Loaded songs: {len(songs)} songs from catalog")
+    print(f"Scoring mode: {SCORING_MODE} (available: {', '.join(AVAILABLE_SCORING_MODES)})\n")
     
     # Test each profile
     for profile in USER_PROFILES:
@@ -150,7 +152,7 @@ def main() -> None:
         print(f"\n            Acousticness {profile['target_acousticness']}, "
               f"Tempo {profile['target_tempo_bpm']} BPM\n")
         
-        recommendations = recommend_songs(profile, songs, k=5)
+        recommendations = recommend_songs(profile, songs, k=5, mode=SCORING_MODE)
         
         for i, (song, score, explanation) in enumerate(recommendations, 1):
             print(format_recommendation(song, score, explanation, i))
