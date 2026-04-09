@@ -63,12 +63,7 @@ Prompts:
 
 Where the system struggles or behaves unfairly. 
 
-Prompts:  
-
-- Features it does not consider  
-- Genres or moods that are underrepresented  
-- Cases where the system overfits to one preference  
-- Ways the scoring might unintentionally favor some users  
+The system exhibits a significant bias toward numerical audio features over categorical preferences like genre, as demonstrated by the weight shift experiment where doubling energy importance and halving genre weight caused users preferring lofi music to receive pop recommendations with higher confidence scores. This feature dominance creates filter bubbles for users with conflicting preferences, where songs matching energy levels are prioritized even when they contradict stated genre preferences. Additionally, users seeking extreme values in features like very low energy (below 0.28) or very high acousticness (above 0.94) may receive suboptimal recommendations due to the dataset's limited range in these attributes. The binary nature of genre and mood matching compared to the continuous scoring of audio features further amplifies this imbalance, potentially marginalizing users whose musical taste relies more heavily on categorical distinctions than numerical similarities.  
 
 ---
 
@@ -76,14 +71,7 @@ Prompts:
 
 How you checked whether the recommender behaved as expected. 
 
-Prompts:  
-
-- Which user profiles you tested  
-- What you looked for in the recommendations  
-- What surprised you  
-- Any simple tests or comparisons you ran  
-
-No need for numeric metrics unless you created some.
+I tested the recommender with seven diverse user profiles to evaluate its behavior across different musical preferences: Lofi Devotee (chill, focused lofi/ambient), Confused Party Animal (lofi genres but high energy/intense mood), Maximum Maximalist (extreme values across all features), Jazz Snob (niche jazz preference), Mood Ring Enthusiast (multiple genres and moods), Audio Engineer (broad genres with specific feature targets), and Median Listener (average preferences). I looked for whether recommendations matched musical intuition, whether the system handled conflicting preferences appropriately, and how changes to the scoring weights affected outcomes. What surprised me was that the weight shift experiment (doubling energy importance while halving genre weight) actually made recommendations worse for users with conflicting preferences, revealing that numerical features dominate categorical preferences more than expected. I ran a simple experiment comparing original vs. modified scoring logic and documented the results in EXPERIMENT_RESULTS.md.
 
 ---
 
