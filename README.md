@@ -184,11 +184,82 @@ Loaded songs: 18
 
 ## Experiments You Tried
 
-Use this section to document the experiments you ran. For example:
+### Stress Test: 7 Diverse User Profiles
 
-- What happened when you changed the weight on genre from 2.0 to 0.5
-- What happened when you added tempo or valence to the score
-- How did your system behave for different types of users
+To evaluate the recommender's behavior, I tested it with 7 distinct user profiles ranging from normal to adversarial:
+
+#### **1. Lofi Devotee (Control Profile)**
+- **Preferences**: lofi/ambient, chill/focused mood, low energy (0.40), high acousticness (0.80)
+- **Result**: Perfect recommendations (100.0/100) - Algorithm excels with coherent preferences
+- **Top song**: "Midnight Coding" by LoRoom - perfect genre/mood match + all numerical features aligned
+
+#### **2. Confused Party Animal (Contradictory)**
+- **Preferences**: lofi/ambient genres BUT wants high energy (0.90), intense/happy mood, electronic sound
+- **Result**: Algorithm prioritizes numerical features over genre mismatch
+  - Top: "Gym Hero" (86.8/100) - pop/intense, not lofi, but matches energy perfectly
+  - Shows **algorithmic bias**: Features win over genre when conflicting
+- **Insight**: System can be "tricked" by conflicting preferences; features dominate genre labels
+
+#### **3. Maximum Maximalist (Extreme Values)**
+- **Preferences**: Extreme targets (energy 0.95, valence 0.95, danceability 0.95, acousticness 0.02, tempo 165 BPM)
+- **Result**: No song perfectly matches extreme combo; graceful degradation observed
+  - Top: "Gym Hero" (73.9/100) - incomplete match but highest overall
+  - Lower scores overall (50-74 range) because no song satisfies all extremes
+- **Insight**: Extreme preferences expose **distance metric limitations**; no single perfect result
+
+#### **4. Jazz Snob (Niche Profile)**
+- **Preferences**: Jazz only, very specific numerical targets, high acousticness (0.90)
+- **Result**: Deep expertise isolation
+  - Top: "Coffee Shop Stories" (100.0/100) - only jazz song, perfect match
+  - Fallback: Lofi songs score 70-74, showing **cold-start problem** for niche genres
+- **Insight**: Creates **filter bubble** - jazz fan gets mostly jazz recommendations with weak alternatives
+
+#### **5. Mood Ring Enthusiast (Genre-Heavy)**
+- **Preferences**: Multiple genres (lofi/ambient/jazz), multiple moods, flexible numerics
+- **Result**: Excellent diversity with high scores
+  - Top 3 all score 95-100/100 (different songs, different artists)
+  - Broad preferences → broad recommendations
+- **Insight**: Demonstrates **importance of genre/mood weighting** (+2.5, +2.0) = 24% of max points
+
+#### **6. Audio Engineer (Feature-Heavy)**
+- **Preferences**: Broad genres/moods, very specific numerical targets (energy 0.75, valence 0.70, etc.)
+- **Result**: Precise numerical matching works
+  - Top: "Sunrise City" (97.9/100) - excellent feature fit despite being pop (not favorite genre)
+  - Shows features can overcome genre mismatch when numerically aligned
+- **Insight**: Demonstrates **numerical features compete equally with categorical** when well-defined
+
+#### **7. Median Listener (Neutral/Average)**
+- **Preferences**: Common genres (pop/rock), common moods (happy/chill), middle-ground targets (all 0.50-0.65)
+- **Result**: Moderate scores across diverse songs
+  - Closest matches: Midnight Coding, Sunrise City, Island Vibes (70-73/100)
+  - No perfect matches because middle targets are reasonable but not aligned with actual song values
+- **Insight**: **Regression to mean** - average preferences get average recommendations; lacks differentiation
+
+### Key Findings from Stress Tests
+
+| Profile | Main Finding | Algorithmic Bias Revealed |
+|---------|---|---|
+| **Control** | Works as designed | ✅ None - excellent baseline |
+| **Contradictory** | Features override genre | ⚠️ Numerical features dominate categorical |
+| **Extremes** | Graceful degradation | ⚠️ Hard to satisfy extreme combinations |
+| **Niche** | Filter bubble effect | ⚠️ Isolates users in single genre |
+| **Genre-Heavy** | Genre weighting effective | ✅ Multiple genres enable discovery |
+| **Feature-Heavy** | Features drive recommendations | ⚠️ Genre can be overridden by numerics |
+| **Neutral** | Middle-ground results | ⚠️ Tends toward average; lacks differentiation |
+
+### How Real-World Biases Appear
+
+1. **Filter Bubble Risk**: Niche preferences (Profile #4) trap users in single genre despite good audio features elsewhere
+2. **Popularity Bias**: Average preferences (Profile #7) recommend only the statistically "safe" songs
+3. **Feature Dominance**: Contradictory profiles (Profile #2) show features can override semantic meaning of genre labels
+4. **Cold Start**: New artists without genre label can't overcome niche user preferences
+5. **No Serendipity**: Adjacent genres (e.g., "synthwave" vs. "lofi") treated as unrelated if not in preferred list
+
+---
+
+## Experiments You Tried
+
+Examples of what you could test:
 
 ---
 
