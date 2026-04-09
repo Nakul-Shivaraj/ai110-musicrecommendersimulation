@@ -22,7 +22,12 @@ USER_PROFILES = [
         "target_valence": 0.60,
         "target_danceability": 0.60,
         "target_acousticness": 0.80,
-        "target_tempo_bpm": 75
+        "target_tempo_bpm": 75,
+        "prefer_popular_songs": False,
+        "preferred_release_decades": ["2020s", "2010s"],
+        "preferred_mood_tags": ["chill", "nostalgic", "peaceful"],
+        "target_artist_popularity": 70.0,
+        "target_song_length_seconds": 200.0
     },
     {
         "name": "Confused Party Animal",
@@ -32,7 +37,12 @@ USER_PROFILES = [
         "target_valence": 0.85,
         "target_danceability": 0.85,
         "target_acousticness": 0.05,
-        "target_tempo_bpm": 140
+        "target_tempo_bpm": 140,
+        "prefer_popular_songs": True,
+        "preferred_release_decades": ["2010s", "2020s"],
+        "preferred_mood_tags": ["energetic", "intense", "happy"],
+        "target_artist_popularity": 80.0,
+        "target_song_length_seconds": 240.0
     },
     {
         "name": "Maximum Maximalist (Extremes)",
@@ -42,7 +52,12 @@ USER_PROFILES = [
         "target_valence": 0.95,
         "target_danceability": 0.95,
         "target_acousticness": 0.02,
-        "target_tempo_bpm": 165
+        "target_tempo_bpm": 165,
+        "prefer_popular_songs": True,
+        "preferred_release_decades": ["2000s", "2010s"],
+        "preferred_mood_tags": ["aggressive", "intense", "energetic"],
+        "target_artist_popularity": 85.0,
+        "target_song_length_seconds": 300.0
     },
     {
         "name": "Jazz Snob (Niche)",
@@ -52,7 +67,12 @@ USER_PROFILES = [
         "target_valence": 0.70,
         "target_danceability": 0.50,
         "target_acousticness": 0.90,
-        "target_tempo_bpm": 92
+        "target_tempo_bpm": 92,
+        "prefer_popular_songs": False,
+        "preferred_release_decades": ["1980s", "1970s"],
+        "preferred_mood_tags": ["relaxed", "sophisticated", "smooth"],
+        "target_artist_popularity": 60.0,
+        "target_song_length_seconds": 260.0
     },
     {
         "name": "Mood Ring Enthusiast (Genre-Heavy)",
@@ -62,7 +82,12 @@ USER_PROFILES = [
         "target_valence": 0.60,
         "target_danceability": 0.60,
         "target_acousticness": 0.75,
-        "target_tempo_bpm": 80
+        "target_tempo_bpm": 80,
+        "prefer_popular_songs": False,
+        "preferred_release_decades": ["2020s", "2010s", "1980s"],
+        "preferred_mood_tags": ["chill", "focused", "relaxed", "peaceful"],
+        "target_artist_popularity": 65.0,
+        "target_song_length_seconds": 220.0
     },
     {
         "name": "Audio Engineer (Feature-Heavy)",
@@ -72,7 +97,12 @@ USER_PROFILES = [
         "target_valence": 0.70,
         "target_danceability": 0.80,
         "target_acousticness": 0.25,
-        "target_tempo_bpm": 115
+        "target_tempo_bpm": 115,
+        "prefer_popular_songs": True,
+        "preferred_release_decades": ["2010s", "2020s"],
+        "preferred_mood_tags": ["energetic", "happy", "confident"],
+        "target_artist_popularity": 75.0,
+        "target_song_length_seconds": 230.0
     },
     {
         "name": "Median Listener (Neutral)",
@@ -82,7 +112,12 @@ USER_PROFILES = [
         "target_valence": 0.65,
         "target_danceability": 0.65,
         "target_acousticness": 0.45,
-        "target_tempo_bpm": 100
+        "target_tempo_bpm": 100,
+        "prefer_popular_songs": False,
+        "preferred_release_decades": ["2010s", "2000s"],
+        "preferred_mood_tags": ["happy", "chill", "uplifting"],
+        "target_artist_popularity": 70.0,
+        "target_song_length_seconds": 240.0
     }
 ]
 

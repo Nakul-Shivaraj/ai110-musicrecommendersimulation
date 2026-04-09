@@ -23,25 +23,32 @@ This system implements a **content-based recommender** that matches songs to use
 - **Categorical**: `genre` (e.g., pop, lofi, rock), `mood` (e.g., happy, chill, intense)
 - **Numerical (0-1 scale)**: `energy`, `valence` (positivity), `danceability`, `acousticness`
 - **Metadata**: `tempo_bpm`, `title`, `artist`, `id`
+- **Advanced Features**: `song_popularity` (0-100), `release_decade` (e.g., "2020s"), `detailed_moods` (comma-separated tags), `artist_popularity` (0-100), `song_length_seconds` (int)
 
 **UserProfile Information:**
 - **Target preferences**: `target_energy`, `target_valence`, `target_danceability`, `target_acousticness`, `target_tempo_bpm`
 - **Categorical preferences**: `preferred_genres` (list), `preferred_moods` (list)
+- **Advanced preferences**: `prefer_popular_songs` (bool), `preferred_decades` (list), `preferred_moods_list` (list), `target_artist_popularity` (float), `target_song_length_seconds` (float)
 - **Feature weights**: How much each feature matters (e.g., energy_weight=0.4, genre_weight=0.3)
 
 **Algorithm Recipe (Point-Weighting System):**
 
-The recommender scores each song using a point-based system with a theoretical maximum of **19.0 points**:
+The recommender scores each song using a point-based system with a theoretical maximum of **30.75 points**:
 
 | Feature | Points | Calculation |
 |---------|--------|-------------|
 | **Genre Match** | +2.5 | If song genre ∈ preferred_genres |
 | **Mood Match** | +2.0 | If song mood ∈ preferred_moods |
-| **Energy** | 0–3.0 | Distance-based: 3.0 if |song_energy - target| ≤ 0.10; decays with distance |
+| **Energy** | 0–3.0 | Distance-based: 3.0 if \|song_energy - target\| ≤ 0.10; decays with distance |
 | **Valence** | 0–3.0 | Distance-based: max 3.0 points for closeness to target valence |
 | **Danceability** | 0–3.0 | Distance-based: max 3.0 points for closeness to target danceability |
 | **Acousticness** | 0–3.0 | Distance-based: max 3.0 points for closeness to target acousticness |
-| **Tempo (BPM)** | 0–2.5 | 2.5 if |song_tempo - target_tempo| ≤ 10 BPM; decays with distance |
+| **Tempo (BPM)** | 0–2.5 | 2.5 if \|song_tempo - target_tempo\| ≤ 10 BPM; decays with distance |
+| **Song Popularity** | 0–2.0 | Proportional scoring: (song_popularity/100) × 2.0 if prefer_popular_songs=True |
+| **Release Decade** | 0–2.0 | 2.0 for exact decade match; decays based on decade distance |
+| **Detailed Mood Tags** | 0–2.5 | Count of matching mood tags from preferred_moods_list (max 2.5) |
+| **Artist Popularity** | 0–1.5 | Distance-based: max 1.5 for closeness to target_artist_popularity |
+| **Song Length** | 0–2.0 | Distance-based: max 2.0 for closeness to target_song_length_seconds |
 
 **Final Score: `(raw_points / 19.0) × 100`** → Normalized to 0–100 scale for intuitive interpretation.
 
@@ -58,7 +65,10 @@ The recommender scores each song using a point-based system with a theoretical m
 **Expected Biases and Limitations:**
 - **Genre over-prioritization**: With +2.5 for genre match, songs outside preferred genres start at a disadvantage, potentially creating "filter bubbles" and suppressing cross-genre discovery (e.g., a great reggae song never gets recommended to a lofi-heavy user).
 - **Narrow categorical filtering**: Only 4 preferred genres means ~78% of diverse songs are genre mismatches from the start, limiting serendipity.
-- **No semantic understanding**: System can't evaluate lyrics, instrumentals, or nuanced qualities like "nostalgic" or "intimate"—only quantifiable audio features.
+- **Popularity bias**: The song_popularity and artist_popularity features can create a "rich get richer" effect, where already popular songs/artists get recommended more, potentially limiting discovery of niche or emerging content.
+- **Era bias**: Decade-based preferences may create temporal filter bubbles, limiting exposure to music from different eras and reducing cultural diversity in recommendations.
+- **Length preferences**: Song length matching could bias against certain genres (e.g., classical music with longer tracks) or favor specific formats (e.g., pop singles vs. extended mixes).
+- **No semantic understanding**: System can't evaluate lyrics, instrumentals, or nuanced qualities like "nostalgic" or "intimate"—only quantifiable audio features and metadata.
 - **Limited dataset**: With only 18 songs, recommendations are constrained; real systems have millions of tracks.
 - **No collaborative signals**: System ignores what other users like; can't discover emerging artists or cross-community tastes.
 - **Feature extraction limits**: Energy and valence are approximations; the "vibe" of a song is multidimensional and subjective.

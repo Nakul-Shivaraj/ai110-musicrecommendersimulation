@@ -14,3 +14,14 @@ The Median Listener has average preferences across pop/rock genres and happy/chi
 
 ## Why "Gym Hero" Shows Up for Happy Pop Profiles
 "Gym Hero" keeps appearing for users who want happy pop music because it's a pop song with intense energy and high danceability, which matches profiles looking for upbeat, energetic pop tracks. Even though it's labeled as "intense" rather than "happy," its high valence (0.77) and danceability (0.88) make it a good fit for users wanting positive, lively music. The system sees the numerical similarities in energy and rhythm over the exact mood label match.
+
+## Challenge 1: Advanced Song Features Reflection
+
+Adding 5 complex attributes (popularity, release decade, detailed moods, artist popularity, song length) enhanced personalization but revealed key biases:
+
+- **Popularity bias**: "Rich get richer" effect where popular songs get recommended more
+- **Era bias**: Temporal filter bubbles limiting exposure to different musical eras  
+- **Length bias**: Duration preferences can favor certain genres/formats
+- **Complexity trade-off**: More features (max score: 20.75 → 30.75) mean more personalization but also more potential biases
+
+This mirrors real recommender systems where feature expansion must balance personalization with fairness and serendipity.

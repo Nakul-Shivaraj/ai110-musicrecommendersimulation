@@ -1,19 +1,19 @@
-id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness
-1,Sunrise City,Neon Echo,pop,happy,0.82,118,0.84,0.79,0.18
-2,Midnight Coding,LoRoom,lofi,chill,0.42,78,0.56,0.62,0.71
-3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.10
-4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.60,0.58,0.86
-5,Gym Hero,Max Pulse,pop,intense,0.93,132,0.77,0.88,0.05
-6,Spacewalk Thoughts,Orbit Bloom,ambient,chill,0.28,60,0.65,0.41,0.92
-7,Coffee Shop Stories,Slow Stereo,jazz,relaxed,0.37,90,0.71,0.54,0.89
-8,Night Drive Loop,Neon Echo,synthwave,moody,0.75,110,0.49,0.73,0.22
-9,Focus Flow,LoRoom,lofi,focused,0.40,80,0.59,0.60,0.78
-10,Rooftop Lights,Indigo Parade,indie pop,happy,0.76,124,0.81,0.82,0.35
-11,Shadows Rise,Darkwave Collective,electronic,dark,0.88,124,0.32,0.75,0.08
-12,Concrete Jungle,BeatMaster Z,hip-hop,energetic,0.79,96,0.68,0.81,0.12
-13,Symphony of Solitude,Chamber Ensemble,classical,contemplative,0.31,72,0.58,0.35,0.94
-14,Island Vibes,Reggae Sunrise,reggae,uplifting,0.58,92,0.77,0.68,0.65
-15,Autumn Echo,Whisper Folk,folk,melancholic,0.44,84,0.41,0.52,0.88
-16,Burning Skies,Metal Storm,metal,aggressive,0.96,168,0.29,0.72,0.04
-17,Velvet Dreams,Silk & Soul,r&b,romantic,0.65,104,0.82,0.76,0.48
-18,Electric Heartbeat,Pulse Frequency,house,energetic,0.87,128,0.79,0.89,0.06
+id,title,artist,genre,mood,energy,tempo_bpm,valence,danceability,acousticness,song_popularity,release_decade,detailed_moods,artist_popularity,song_length_seconds
+1,Sunrise City,Neon Echo,pop,happy,0.82,118,0.84,0.79,0.18,85,2020s,"uplifting,energetic,happy",80,200
+2,Midnight Coding,LoRoom,lofi,chill,0.42,78,0.56,0.62,0.71,65,2020s,"chill,nostalgic,peaceful",75,180
+3,Storm Runner,Voltline,rock,intense,0.91,152,0.48,0.66,0.10,78,2000s,"aggressive,energetic,intense",70,280
+4,Library Rain,Paper Lanterns,lofi,chill,0.35,72,0.60,0.58,0.86,60,2020s,"chill,peaceful,meditative",60,160
+5,Gym Hero,Max Pulse,pop,intense,0.93,132,0.77,0.88,0.05,88,2010s,"energetic,motivating,powerful",85,220
+6,Spacewalk Thoughts,Orbit Bloom,ambient,chill,0.28,60,0.65,0.41,0.92,50,2020s,"chill,meditative,ethereal",55,240
+7,Coffee Shop Stories,Slow Stereo,jazz,relaxed,0.37,90,0.71,0.54,0.89,72,1980s,"relaxed,sophisticated,smooth",65,240
+8,Night Drive Loop,Neon Echo,synthwave,moody,0.75,110,0.49,0.73,0.22,68,2010s,"moody,nostalgic,atmospheric",62,260
+9,Focus Flow,LoRoom,lofi,focused,0.40,80,0.59,0.60,0.78,62,2020s,"focused,chill,calming",72,190
+10,Rooftop Lights,Indigo Parade,indie pop,happy,0.76,124,0.81,0.82,0.35,80,2010s,"uplifting,happy,vibrant",75,210
+11,Shadows Rise,Darkwave Collective,electronic,dark,0.88,124,0.32,0.75,0.08,70,2020s,"dark,intense,moody",68,270
+12,Concrete Jungle,BeatMaster Z,hip-hop,energetic,0.79,96,0.68,0.81,0.12,82,2010s,"energetic,confident,bold",78,240
+13,Symphony of Solitude,Chamber Ensemble,classical,contemplative,0.31,72,0.58,0.35,0.94,55,1950s,"contemplative,peaceful,timeless",50,320
+14,Island Vibes,Reggae Sunrise,reggae,uplifting,0.58,92,0.77,0.68,0.65,75,1980s,"uplifting,relaxed,groovy",68,270
+15,Autumn Echo,Whisper Folk,folk,melancholic,0.44,84,0.41,0.52,0.88,58,1970s,"melancholic,nostalgic,emotional",52,300
+16,Burning Skies,Metal Storm,metal,aggressive,0.96,168,0.29,0.72,0.04,66,2000s,"aggressive,intense,raw",61,350
+17,Velvet Dreams,Silk & Soul,r&b,romantic,0.65,104,0.82,0.76,0.48,83,1990s,"romantic,smooth,sultry",77,250
+18,Electric Heartbeat,Pulse Frequency,house,energetic,0.87,128,0.79,0.89,0.06,86,2010s,"energetic,euphoric,driving",80,240
