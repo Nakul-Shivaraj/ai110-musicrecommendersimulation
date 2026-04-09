@@ -188,7 +188,20 @@ Loaded songs: 18
 
 To evaluate the recommender's behavior, I tested it with 7 distinct user profiles ranging from normal to adversarial:
 
+#### **Stress Test Output: Lofi Devotee (Control Profile)**
+
+![Stress Test Output Screenshot](Output%20Screenshot.png)
+
+**Observation**: Perfect recommendations (100.0/100) when preferences are coherent and aligned with song features. The screenshot shows:
+- Lofi Devotee profile with coherent preferences (lofi/ambient genres, chill/focused moods)
+- Top recommendations scoring 100.0/100
+- Complete scoring breakdown showing genre match, mood match, and feature similarity
+- System excels with well-aligned user preferences
+
+---
+
 #### **1. Lofi Devotee (Control Profile)**
+
 - **Preferences**: lofi/ambient, chill/focused mood, low energy (0.40), high acousticness (0.80)
 - **Result**: Perfect recommendations (100.0/100) - Algorithm excels with coherent preferences
 - **Top song**: "Midnight Coding" by LoRoom - perfect genre/mood match + all numerical features aligned
