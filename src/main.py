@@ -9,6 +9,8 @@ Tests diverse user profiles to evaluate recommender behavior:
 - Genre-heavy vs. feature-heavy profiles
 """
 
+from tabulate import tabulate
+
 from .recommender import AVAILABLE_SCORING_MODES, load_songs, recommend_songs
 
 SCORING_MODE = "genre-first"
@@ -123,44 +125,103 @@ USER_PROFILES = [
 ]
 
 
-def format_recommendation(song, score, explanation, rank):
-    """Format a single recommendation nicely."""
-    output = f"\n{rank}. {song['title']} - {song['artist']}"
-    output += f"\n   Score: {score:.1f}/100"
-    output += f"\n   Breakdown:"
-    reasons = explanation.split(" | ")
-    for reason in reasons:
-        output += f"\n      - {reason}"
-    return output
+_REASON_LABELS = {
+    "Genre":       "Genre",
+    "Mood":        "Mood",
+    "Energy":      "Energy",
+    "Valence":     "Valence",
+    "Danceability":"Dance",
+    "Acousticness":"Acoustic",
+    "Tempo":       "Tempo",
+    "Song Pop":    "SongPop",
+    "Artist Pop":  "ArtistPop",
+    "Release":     "Decade",
+    "Mood Tags":   "MoodTags",
+    "Song Length": "Length",
+    "DIVERSITY":   "Diversity",
+}
+
+# Maximum characters allowed in the Reasons column before wrapping
+_REASON_WRAP = 62
+
+
+def _format_reasons(explanation: str) -> str:
+    """
+    Condense the pipe-separated explanation string into a compact,
+    wrapped multi-line string suitable for a table cell.
+
+    Each reason is shortened to 'Label: value' form and prefixed with
+    a bullet so the cell stays readable at a glance.
+    """
+    parts = explanation.split(" | ")
+    lines = []
+    for part in parts:
+        label = part.split(":")[0].strip()
+        # Find the closest short label
+        short = next(
+            (v for k, v in _REASON_LABELS.items() if label.upper().startswith(k.upper())),
+            label[:10],
+        )
+        lines.append(f"  {short}: {part.split(':', 1)[-1].strip()}")
+
+    # Wrap long lines
+    wrapped = []
+    for line in lines:
+        while len(line) > _REASON_WRAP:
+            wrapped.append(line[:_REASON_WRAP])
+            line = "    " + line[_REASON_WRAP:]
+        wrapped.append(line)
+    return "\n".join(wrapped)
+
+
+def _build_table(recommendations) -> str:
+    """
+    Build a tabulate grid table for a list of (song, score, explanation)
+    tuples.  Columns: Rank | Title | Artist | Genre | Score | Reasons.
+    """
+    rows = []
+    for rank, (song, score, explanation) in enumerate(recommendations, 1):
+        rows.append([
+            rank,
+            song.get("title", ""),
+            song.get("artist", ""),
+            song.get("genre", ""),
+            f"{score:.1f}",
+            _format_reasons(explanation),
+        ])
+
+    headers = ["#", "Title", "Artist", "Genre", "Score", "Reasons"]
+    return tabulate(rows, headers=headers, tablefmt="grid", maxcolwidths=[3, 22, 18, 12, 6, _REASON_WRAP])
 
 
 def main() -> None:
     songs = load_songs("data/songs.csv")
-    
-    print(f"\n[MUSIC RECOMMENDER SIMULATION - STRESS TEST]")
-    print(f"Loaded songs: {len(songs)} songs from catalog")
-    print(f"Scoring mode: {SCORING_MODE} (available: {', '.join(AVAILABLE_SCORING_MODES)})\n")
-    
-    # Test each profile
+
+    print(f"\n{'='*90}")
+    print(f"  MUSIC RECOMMENDER SIMULATION - STRESS TEST")
+    print(f"  {len(songs)} songs loaded  |  Scoring mode: {SCORING_MODE}")
+    print(f"  Available modes: {', '.join(AVAILABLE_SCORING_MODES)}")
+    print(f"{'='*90}")
+
     for profile in USER_PROFILES:
-        print("=" * 90)
-        print(f"\n[TEST PROFILE: {profile['name']}]")
-        print(f"   Genres: {', '.join(profile['preferred_genres'])}")
-        print(f"   Moods: {', '.join(profile['preferred_moods'])}")
-        print(f"   Targets: Energy {profile['target_energy']}, Valence {profile['target_valence']}, "
-              f"Danceability {profile['target_danceability']}", end="")
-        print(f"\n            Acousticness {profile['target_acousticness']}, "
-              f"Tempo {profile['target_tempo_bpm']} BPM\n")
-        
-        recommendations = recommend_songs(profile, songs, k=5, mode=SCORING_MODE)
-        
-        for i, (song, score, explanation) in enumerate(recommendations, 1):
-            print(format_recommendation(song, score, explanation, i))
-        
+        print(f"\n  PROFILE: {profile['name']}")
+        print(f"  Genres : {', '.join(profile['preferred_genres'])}")
+        print(f"  Moods  : {', '.join(profile['preferred_moods'])}")
+        print(
+            f"  Targets: Energy {profile['target_energy']}  "
+            f"Valence {profile['target_valence']}  "
+            f"Danceability {profile['target_danceability']}  "
+            f"Acousticness {profile['target_acousticness']}  "
+            f"Tempo {profile['target_tempo_bpm']} BPM"
+        )
         print()
-    
-    print("=" * 90)
-    print("\n[STRESS TEST COMPLETE]")
+
+        recommendations = recommend_songs(profile, songs, k=5, mode=SCORING_MODE)
+        print(_build_table(recommendations))
+        print()
+
+    print(f"{'='*90}")
+    print("  STRESS TEST COMPLETE\n")
 
 
 if __name__ == "__main__":

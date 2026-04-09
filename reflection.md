@@ -34,3 +34,13 @@ Adding multiple ranking strategies made the recommender more flexible and easier
 - **Energy-focused** boosts songs that fit a target energy and tempo profile, useful for workout or focus-oriented listeners.
 
 This change shows how modular scoring strategies can support different listening goals without rewriting core scoring logic.
+
+## Challenge 4: Visual Summary Table Reflection
+
+Before this change, each recommendation printed as a block of raw text — one bullet per scoring reason, no alignment, no way to scan across songs quickly. After adding the `tabulate` grid, the output changed from something you had to read line-by-line to something you can actually analyze at a glance.
+
+The most useful design decision was expanding each reason vertically into its own labeled row within a single grid cell. This meant the table stayed compact horizontally (6 columns) while still surfacing every scoring dimension — genre match, energy proximity, diversity penalty, decade match — without hiding anything behind a summary number. You can now look down the "Score" column to see rank order, then look right at the "Reasons" column to immediately understand *why* that song ranked there.
+
+The diversity penalty rows made the biggest difference for readability. Before the table, lines like `DIVERSITY: Genre 'lofi' already appears 1x -> genre penalty x0.80` were buried inside a long pipe-separated string that was easy to skim past. In the grid, they appear as a distinct labeled row at the bottom of the cell, visually separated from the pure scoring reasons. That made it obvious which songs were penalized and by how much — something that was nearly impossible to spot in the old format.
+
+One tension I noticed: the more features you add to the scoring system, the longer each Reasons cell gets. With 12 scoring dimensions plus possible diversity notes, even with wrapping at 62 characters the cells for highly-penalized songs become tall. This is a direct readability cost of having a transparent, fully-explained recommender — you can't surface all the "why" without making the output larger. Real apps solve this by hiding the reasoning by default and expanding on demand. For a terminal simulation though, full transparency is more valuable than brevity.

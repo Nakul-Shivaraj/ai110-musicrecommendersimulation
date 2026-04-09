@@ -612,7 +612,7 @@ def _apply_diversity_penalty(
         multiplier *= artist_multiplier
         reasons.append(
             f"Artist '{candidate.get('artist')}' already appears {artist_count}x "
-            f"→ artist penalty x{artist_multiplier:.2f}"
+            f"-> artist penalty x{artist_multiplier:.2f}"
         )
 
     if genre_count > 0:
@@ -620,7 +620,7 @@ def _apply_diversity_penalty(
         multiplier *= genre_multiplier
         reasons.append(
             f"Genre '{candidate.get('genre')}' already appears {genre_count}x "
-            f"→ genre penalty x{genre_multiplier:.2f}"
+            f"-> genre penalty x{genre_multiplier:.2f}"
         )
 
     return multiplier, reasons
